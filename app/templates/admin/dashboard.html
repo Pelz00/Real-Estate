@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:40px;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Platform overview</span>
+        <h2>Admin dashboard</h2>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <a href="{{ url_for('admin.dashboard') }}" class="admin-tab is-active">Overview</a>
+      <a href="{{ url_for('admin.users') }}" class="admin-tab">Users</a>
+      <a href="{{ url_for('admin.properties') }}" class="admin-tab">Properties</a>
+      <a href="{{ url_for('admin.inquiries') }}" class="admin-tab">Inquiries</a>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="num">{{ stats.users }}</span>
+        <span class="label">Total users</span>
+        <div class="sub">{{ stats.agents }} agents &middot; {{ stats.buyers }} buyers</div>
+      </div>
+      <div class="stat-card">
+        <span class="num">{{ stats.listings }}</span>
+        <span class="label">Total listings</span>
+        <div class="sub">{{ stats.active_listings }} currently active</div>
+      </div>
+      <div class="stat-card">
+        <span class="num">{{ stats.inquiries }}</span>
+        <span class="label">Total inquiries</span>
+        <div class="sub">{{ stats.new_inquiries }} awaiting response</div>
+      </div>
+      <div class="stat-card">
+        <span class="num">{{ stats.listings - stats.active_listings }}</span>
+        <span class="label">Off-market listings</span>
+        <div class="sub">Hidden from search</div>
+      </div>
+    </div>
+
+    <div class="admin-dashboard-grid">
+      <div>
+        <div class="section-header" style="margin-bottom:16px;">
+          <h3 class="mt-0">Newest users</h3>
+          <a href="{{ url_for('admin.users') }}" class="btn btn-ghost btn-small">Manage users</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>Joined</th></tr></thead>
+            <tbody>
+              {% for user in recent_users %}
+                <tr>
+                  <td>{{ user.name }}<br><span class="form-hint">{{ user.email }}</span></td>
+                  <td><span class="badge-role">{{ user.role }}</span></td>
+                  <td>{{ user.created_at.strftime('%b %-d, %Y') if user.created_at else '' }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="3" class="form-hint">No users yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-header" style="margin-bottom:16px;">
+          <h3 class="mt-0">Newest listings</h3>
+          <a href="{{ url_for('admin.properties') }}" class="btn btn-ghost btn-small">Manage listings</a>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Property</th><th>Owner</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for property in recent_properties %}
+                <tr>
+                  <td><a href="{{ url_for('properties.detail', property_id=property.id) }}">{{ property.title }}</a></td>
+                  <td>{{ property.owner.name }}</td>
+                  <td>
+                    <span class="status-pill {{ 'status-active' if property.is_available else 'status-inactive' }}">
+                      {{ 'Active' if property.is_available else 'Off market' }}
+                    </span>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="3" class="form-hint">No listings yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

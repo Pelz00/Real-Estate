@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}My inquiries | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:40px;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Your activity</span>
+        <h2>My inquiries</h2>
+      </div>
+    </div>
+
+    {% if inquiries %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Your message</th>
+              <th>Sent</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inquiry in inquiries %}
+              <tr>
+                <td><a href="{{ url_for('properties.detail', property_id=inquiry.property_id) }}">{{ inquiry.property.title }}</a></td>
+                <td style="max-width:320px;">{{ inquiry.message }}</td>
+                <td>{{ inquiry.created_at.strftime('%b %-d, %Y') if inquiry.created_at else '' }}</td>
+                <td>
+                  <span class="status-pill {{ 'status-responded' if inquiry.status == 'responded' else 'status-new' }}">
+                    {{ 'Replied' if inquiry.status == 'responded' else 'Awaiting reply' }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>You haven't sent any inquiries</h3>
+        <p>Browse listings and reach out to an agent to get started.</p>
+        <a href="{{ url_for('properties.list_properties') }}" class="btn btn-primary">Browse listings</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

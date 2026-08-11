@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit listing' if mode == 'edit' else 'Add listing' }} | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:40px;">
+  <div class="container">
+    <div class="card-form">
+      <span class="hero-eyebrow">{{ 'Editing listing' if mode == 'edit' else 'New listing' }}</span>
+      <h1 class="mt-0">{{ 'Update property details' if mode == 'edit' else 'Publish a new property' }}</h1>
+      <p>Give buyers the details they need to picture themselves there.</p>
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          {{ form.title.label }}
+          {{ form.title() }}
+          {% for e in form.title.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="form-group">
+          {{ form.description.label }}
+          {{ form.description(rows=6) }}
+          {% for e in form.description.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            {{ form.price.label }}
+            {{ form.price() }}
+            {% for e in form.price.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            {{ form.listing_type.label }}
+            {{ form.listing_type() }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          {{ form.property_type.label }}
+          {{ form.property_type() }}
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            {{ form.bedrooms.label }}
+            {{ form.bedrooms() }}
+          </div>
+          <div class="form-group">
+            {{ form.bathrooms.label }}
+            {{ form.bathrooms() }}
+          </div>
+          <div class="form-group">
+            {{ form.area_sqft.label }}
+            {{ form.area_sqft() }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          {{ form.address.label }}
+          {{ form.address() }}
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            {{ form.city.label }}
+            {{ form.city() }}
+            {% for e in form.city.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          </div>
+          <div class="form-group">
+            {{ form.state.label }}
+            {{ form.state() }}
+            {% for e in form.state.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="form-group">
+          {{ form.image.label }}
+          {{ form.image() }}
+          <div class="form-hint">PNG, JPG or WEBP. Leave blank to keep the current photo.</div>
+          {% for e in form.image.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          {% if mode == 'edit' and property.cover_image %}
+            <img src="{{ url_for('static', filename='uploads/' + property.cover_image) }}" alt="" style="margin-top:10px; max-width:220px; border-radius:8px; border:1px solid var(--border);">
+          {% endif %}
+          <img id="imagePreview" alt="" style="display:none; margin-top:10px; max-width:220px; border-radius:8px; border:1px solid var(--border);">
+        </div>
+
+        <div class="form-group checkbox-row">
+          {{ form.is_available() }}
+          {{ form.is_available.label }}
+        </div>
+
+        {{ form.submit(class="btn btn-primary btn-block") }}
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

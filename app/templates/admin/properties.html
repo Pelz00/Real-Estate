@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Manage properties | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:40px;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Platform overview</span>
+        <h2>Manage properties</h2>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <a href="{{ url_for('admin.dashboard') }}" class="admin-tab">Overview</a>
+      <a href="{{ url_for('admin.users') }}" class="admin-tab">Users</a>
+      <a href="{{ url_for('admin.properties') }}" class="admin-tab is-active">Properties</a>
+      <a href="{{ url_for('admin.inquiries') }}" class="admin-tab">Inquiries</a>
+    </div>
+
+    {% if properties %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Owner</th>
+              <th>Type</th>
+              <th>Price</th>
+              <th>City</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for property in properties %}
+              <tr>
+                <td><a href="{{ url_for('properties.detail', property_id=property.id) }}"><strong>{{ property.title }}</strong></a></td>
+                <td>{{ property.owner.name }}</td>
+                <td>{{ 'For sale' if property.listing_type == 'sale' else 'For rent' }}</td>
+                <td>{{ property.formatted_price }}</td>
+                <td>{{ property.city }}</td>
+                <td>
+                  <span class="status-pill {{ 'status-active' if property.is_available else 'status-inactive' }}">
+                    {{ 'Active' if property.is_available else 'Off market' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="inline-actions">
+                    <form action="{{ url_for('admin.toggle_property', property_id=property.id) }}" method="post">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-ghost btn-small">
+                        {{ 'Take offline' if property.is_available else 'Reactivate' }}
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_property', property_id=property.id) }}" method="post" onsubmit="return confirm('Delete this listing? This cannot be undone.');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>No listings on the platform yet</h3>
+        <p>Once agents start publishing, they'll show up here.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

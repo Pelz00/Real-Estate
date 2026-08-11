@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Manage users | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:40px;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Platform overview</span>
+        <h2>Manage users</h2>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <a href="{{ url_for('admin.dashboard') }}" class="admin-tab">Overview</a>
+      <a href="{{ url_for('admin.users') }}" class="admin-tab is-active">Users</a>
+      <a href="{{ url_for('admin.properties') }}" class="admin-tab">Properties</a>
+      <a href="{{ url_for('admin.inquiries') }}" class="admin-tab">Inquiries</a>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Listings</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td><strong>{{ user.name }}</strong><br><span class="form-hint">{{ user.email }}</span></td>
+              <td>
+                <span class="status-pill {{ 'status-admin' if user.role == 'admin' else 'status-active' if user.role == 'agent' else '' }}" style="{% if user.role == 'buyer' %}background:var(--surface-2); color:var(--text-muted);{% endif %}">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>{{ user.properties.count() }}</td>
+              <td>
+                <span class="status-pill {{ 'status-active' if user.is_active else 'status-inactive' }}">
+                  {{ 'Active' if user.is_active else 'Deactivated' }}
+                </span>
+              </td>
+              <td>{{ user.created_at.strftime('%b %-d, %Y') if user.created_at else '' }}</td>
+              <td>
+                <div class="inline-actions">
+                  {% if user.id != current_user.id %}
+                    <form action="{{ url_for('admin.set_role', user_id=user.id) }}" method="post">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <select name="role" class="role-select" onchange="this.form.submit()">
+                        <option value="buyer" {{ 'selected' if user.role == 'buyer' }}>Buyer</option>
+                        <option value="agent" {{ 'selected' if user.role == 'agent' }}>Agent</option>
+                        <option value="admin" {{ 'selected' if user.role == 'admin' }}>Admin</option>
+                      </select>
+                    </form>
+                    <form action="{{ url_for('admin.toggle_active', user_id=user.id) }}" method="post">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-ghost btn-small">
+                        {{ 'Deactivate' if user.is_active else 'Reactivate' }}
+                      </button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="post" onsubmit="return confirm('Delete {{ user.name }} and all of their listings? This cannot be undone.');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                    </form>
+                  {% else %}
+                    <span class="form-hint">This is you</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="form-hint">No users found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endblock %}

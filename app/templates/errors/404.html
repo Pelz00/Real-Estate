@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page not found | Haven & Co.{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="empty-state" style="max-width:480px;">
+    <span class="hero-eyebrow">404</span>
+    <h3>We couldn't find that page</h3>
+    <p>The listing or page you're looking for may have moved or been taken down.</p>
+    <a href="{{ url_for('main.home') }}" class="btn btn-primary">Back to home</a>
+  </div>
+</div>
+{% endblock %}

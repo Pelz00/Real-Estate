@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}{{ property.title }} | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:36px;">
+  <div class="container">
+    <a href="{{ url_for('properties.list_properties') }}" class="nav-link" style="padding-left:0; display:inline-block; margin-bottom:16px;">&larr; Back to listings</a>
+
+    <div class="detail-layout">
+      <div>
+        {% if property.cover_image %}
+          <img class="detail-hero-img" src="{{ url_for('static', filename='uploads/' + property.cover_image) }}" alt="{{ property.title }}">
+        {% else %}
+          <div class="detail-hero-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10.5L12 3l9 7.5M5 9.5V21h14V9.5"/></svg>
+          </div>
+        {% endif %}
+
+        <div style="display:flex; align-items:center; gap:10px; margin-top:24px;">
+          <span class="tag {{ 'tag-sale' if property.listing_type == 'sale' else 'tag-rent' }}" style="position:static;">
+            {{ 'For sale' if property.listing_type == 'sale' else 'For rent' }}
+          </span>
+          <span class="badge-role">{{ property.property_type|capitalize }}</span>
+          {% if not property.is_available %}<span class="badge-role">Off market</span>{% endif %}
+        </div>
+
+        <h1 style="margin-top:14px;">{{ property.title }}</h1>
+        <span class="property-location" style="font-size:0.95rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s7-6.2 7-12A7 7 0 1 0 5 10c0 5.8 7 12 7 12Z"/><circle cx="12" cy="10" r="2.4"/></svg>
+          {{ property.address + ', ' if property.address }}{{ property.city }}, {{ property.state }}
+        </span>
+
+        <div class="detail-stats">
+          <div class="detail-stat"><span class="num">{{ property.bedrooms }}</span><span class="label">Bedrooms</span></div>
+          <div class="detail-stat"><span class="num">{{ property.bathrooms }}</span><span class="label">Bathrooms</span></div>
+          <div class="detail-stat"><span class="num">{{ "{:,}".format(property.area_sqft) }}</span><span class="label">Sqft</span></div>
+        </div>
+
+        <h3>About this property</h3>
+        <p style="white-space:pre-line;">{{ property.description }}</p>
+
+        <p class="form-hint">Listed by {{ property.owner.name }} &middot; {{ property.created_at.strftime('%B %-d, %Y') if property.created_at else '' }}</p>
+
+        {% if current_user.is_authenticated and current_user.id == property.owner_id %}
+          <div style="display:flex; gap:10px; margin-top:12px;">
+            <a href="{{ url_for('properties.edit', property_id=property.id) }}" class="btn btn-ghost btn-small">Edit listing</a>
+            <form action="{{ url_for('properties.delete', property_id=property.id) }}" method="post" onsubmit="return confirm('Delete this listing? This cannot be undone.');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-danger btn-small">Delete</button>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+
+      <aside class="sidebar-card">
+        <span class="sidebar-price">{{ property.formatted_price }}</span>
+        <p class="form-hint" style="margin-top:2px;">Contact the agent about this listing</p>
+
+        <form action="{{ url_for('inquiries.send', property_id=property.id) }}" method="post" style="margin-top:18px;">
+          {{ form.hidden_tag() }}
+          <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(value=form.name.data or (current_user.name if current_user.is_authenticated else '')) }}
+          </div>
+          <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(value=form.email.data or (current_user.email if current_user.is_authenticated else '')) }}
+          </div>
+          <div class="form-group">
+            {{ form.phone.label }}
+            {{ form.phone() }}
+          </div>
+          <div class="form-group">
+            {{ form.message.label }}
+            {{ form.message(rows=4) }}
+          </div>
+          {{ form.submit(class="btn btn-primary btn-block") }}
+        </form>
+      </aside>
+    </div>
+
+    {% if similar %}
+      <div class="section-header" style="margin-top:56px;">
+        <div>
+          <span class="eyebrow">Nearby</span>
+          <h2>Similar in {{ property.city }}</h2>
+        </div>
+      </div>
+      <div class="property-grid">
+        {% for property in similar %}
+          {% include "properties/_card.html" %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Access denied | Haven & Co.{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="empty-state" style="max-width:480px;">
+    <span class="hero-eyebrow">403</span>
+    <h3>You don't have access to that</h3>
+    <p>This action is restricted to the listing's owner.</p>
+    <a href="{{ url_for('main.home') }}" class="btn btn-primary">Back to home</a>
+  </div>
+</div>
+{% endblock %}

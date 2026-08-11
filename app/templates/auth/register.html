@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Create account | Haven & Co.{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <span class="hero-eyebrow">Join Haven &amp; Co.</span>
+    <h1>Create your account</h1>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="form-group">
+        {{ form.name.label }}
+        {{ form.name() }}
+        {% for e in form.name.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email() }}
+        {% for e in form.email.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="form-group">
+        {{ form.phone.label }}
+        {{ form.phone() }}
+      </div>
+      <div class="form-group">
+        {{ form.role.label }}
+        {{ form.role() }}
+        <div class="form-hint">Agents can publish and manage property listings. Buyers can search and send inquiries.</div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-group">
+          {{ form.password.label }}
+          {{ form.password() }}
+          {% for e in form.password.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="form-group">
+          {{ form.confirm_password.label }}
+          {{ form.confirm_password() }}
+          {% for e in form.confirm_password.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+      {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

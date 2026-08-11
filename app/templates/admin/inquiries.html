@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}All inquiries | Haven & Co.{% endblock %}
+
+{% block content %}
+<section class="section" style="padding-top:40px;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="eyebrow">Platform overview</span>
+        <h2>All inquiries</h2>
+      </div>
+    </div>
+
+    <div class="admin-tabs">
+      <a href="{{ url_for('admin.dashboard') }}" class="admin-tab">Overview</a>
+      <a href="{{ url_for('admin.users') }}" class="admin-tab">Users</a>
+      <a href="{{ url_for('admin.properties') }}" class="admin-tab">Properties</a>
+      <a href="{{ url_for('admin.inquiries') }}" class="admin-tab is-active">Inquiries</a>
+    </div>
+
+    {% if inquiries %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>Property</th>
+              <th>Agent</th>
+              <th>Message</th>
+              <th>Sent</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inquiry in inquiries %}
+              <tr>
+                <td><strong>{{ inquiry.name }}</strong><br><span class="form-hint">{{ inquiry.email }}</span></td>
+                <td><a href="{{ url_for('properties.detail', property_id=inquiry.property_id) }}">{{ inquiry.property.title }}</a></td>
+                <td>{{ inquiry.property.owner.name }}</td>
+                <td style="max-width:260px;">{{ inquiry.message }}</td>
+                <td>{{ inquiry.created_at.strftime('%b %-d, %Y') if inquiry.created_at else '' }}</td>
+                <td>
+                  <span class="status-pill {{ 'status-active' if inquiry.status == 'responded' else 'status-inactive' }}">
+                    {{ inquiry.status }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <h3>No inquiries on the platform yet</h3>
+        <p>Buyer messages to agents will show up here as they come in.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
