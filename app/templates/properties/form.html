@@ -75,14 +75,34 @@
         </div>
 
         <div class="form-group">
-          {{ form.image.label }}
-          {{ form.image() }}
-          <div class="form-hint">PNG, JPG or WEBP. Leave blank to keep the current photo.</div>
-          {% for e in form.image.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
-          {% if mode == 'edit' and property.cover_image %}
-            <img src="{{ url_for('static', filename='uploads/' + property.cover_image) }}" alt="" style="margin-top:10px; max-width:220px; border-radius:8px; border:1px solid var(--border);">
+          {{ form.images.label }}
+          {{ form.images(multiple=true) }}
+          <div class="form-hint">Up to 8 PNG, JPG, WEBP, or GIF images per listing. New photos are added to the gallery.</div>
+          {% for e in form.images.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+          <div id="imagePreview" class="image-preview-grid" aria-live="polite"></div>
+          {% if mode == 'edit' and property.images %}
+            <div class="existing-images" aria-label="Existing property photos">
+              {% for image in property.images %}
+                <div class="existing-image">
+                  <img src="{{ image.url }}" alt="Property photo {{ loop.index }}">
+                  <div class="existing-image-actions">
+                    {% if image.position != 0 %}
+                      <form action="{{ url_for('properties.make_cover', property_id=property.id, image_id=image.id) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-ghost btn-small" type="submit">Make cover</button>
+                      </form>
+                    {% else %}
+                      <span class="form-hint">Cover photo</span>
+                    {% endif %}
+                    <form action="{{ url_for('properties.delete_image', property_id=property.id, image_id=image.id) }}" method="post" onsubmit="return confirm('Delete this photo?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn btn-danger btn-small" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
           {% endif %}
-          <img id="imagePreview" alt="" style="display:none; margin-top:10px; max-width:220px; border-radius:8px; border:1px solid var(--border);">
         </div>
 
         <div class="form-group checkbox-row">

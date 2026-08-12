@@ -1,10 +1,11 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed
+from flask_wtf.file import FileAllowed, MultipleFileField
 from wtforms import (
     StringField, PasswordField, SubmitField, SelectField, TextAreaField,
     FloatField, IntegerField, BooleanField
 )
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
+from wtforms.validators import ValidationError
 
 
 class RegisterForm(FlaskForm):
@@ -58,13 +59,18 @@ class PropertyForm(FlaskForm):
     city = StringField("City", validators=[DataRequired(), Length(max=100)])
     state = StringField("State", validators=[DataRequired(), Length(max=100)])
 
-    image = FileField(
-        "Property photo",
+    images = MultipleFileField(
+        "Property photos",
         validators=[FileAllowed(["png", "jpg", "jpeg", "webp", "gif"], "Images only!")],
     )
     is_available = BooleanField("Listing is active", default=True)
 
     submit = SubmitField("Save listing")
+
+    def validate_images(self, field):
+        uploaded_images = [image for image in field.data if image and image.filename]
+        if len(uploaded_images) > 8:
+            raise ValidationError("You can upload a maximum of 8 images per listing.")
 
 
 class InquiryForm(FlaskForm):

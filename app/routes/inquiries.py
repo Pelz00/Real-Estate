@@ -13,6 +13,14 @@ def send(property_id):
     prop = Property.query.get_or_404(property_id)
     form = InquiryForm()
 
+    if not prop.is_available:
+        flash("This listing is no longer accepting inquiries.", "error")
+        return redirect(url_for("properties.detail", property_id=prop.id))
+
+    if current_user.is_authenticated and current_user.id == prop.owner_id:
+        flash("You cannot send an inquiry about your own listing.", "error")
+        return redirect(url_for("properties.detail", property_id=prop.id))
+
     if form.validate_on_submit():
         inquiry = Inquiry(
             name=form.name.data.strip(),

@@ -10,7 +10,7 @@ Demo buyer login:  buyer@haven.com   / password123
 Demo admin login:  admin@haven.com   / password123
 """
 from app import create_app, db
-from app.models import User, Property, Inquiry
+from app.models import User, Property, PropertyImage, Inquiry
 
 app = create_app()
 
@@ -68,6 +68,16 @@ def run():
         for data in DEMO_PROPERTIES:
             prop = Property(owner_id=agent.id, **data)
             db.session.add(prop)
+        db.session.commit()
+
+        image_paths = [
+            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1400&q=80",
+            "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=80",
+        ]
+        for property_index, prop in enumerate(Property.query.order_by(Property.id).all()):
+            for position, image_path in enumerate(image_paths[:2 + property_index % 2]):
+                db.session.add(PropertyImage(property_id=prop.id, image_path=image_path, position=position))
         db.session.commit()
 
         first_property = Property.query.first()

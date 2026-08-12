@@ -8,8 +8,19 @@
 
     <div class="detail-layout">
       <div>
-        {% if property.cover_image %}
-          <img class="detail-hero-img" src="{{ url_for('static', filename='uploads/' + property.cover_image) }}" alt="{{ property.title }}">
+        {% if property.gallery_urls %}
+          <div class="property-gallery">
+            <img id="galleryMainImage" class="detail-hero-img" src="{{ property.gallery_urls[0] }}" alt="{{ property.title }}">
+            {% if property.gallery_urls|length > 1 %}
+              <div class="gallery-thumbnails" aria-label="Property photos">
+                {% for image_url in property.gallery_urls %}
+                  <button class="gallery-thumbnail {{ 'is-active' if loop.first }}" type="button" data-gallery-image="{{ image_url }}" aria-label="View photo {{ loop.index }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">
+                    <img src="{{ image_url }}" alt="{{ property.title }} photo {{ loop.index }}">
+                  </button>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
         {% else %}
           <div class="detail-hero-img" style="display:flex;align-items:center;justify-content:center;color:var(--text-muted);">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10.5L12 3l9 7.5M5 9.5V21h14V9.5"/></svg>

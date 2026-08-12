@@ -8,10 +8,20 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 
 from .. import db
-from ..models import Property
+from ..models import Property, PropertyImage
 from ..forms import PropertyForm
 
 properties_bp = Blueprint("properties", __name__)
+
+# If CLOUDINARY_URL is set (e.g. cloudinary://key:secret@cloud_name), uploads
+# go to Cloudinary and persist across deploys/restarts. Otherwise images are
+# saved to the local static/uploads folder, which is fine for local
+# development but does NOT persist on platforms with an ephemeral
+# filesystem (e.g. Render's free tier) — see README "Deploying to Render".
+CLOUDINARY_ENABLED = bool(os.environ.get("CLOUDINARY_URL"))
+if CLOUDINARY_ENABLED:
+    import cloudinary
+    import cloudinary.uploader
 
 
 def agent_required(func):
@@ -28,14 +38,40 @@ def agent_required(func):
 
 
 def save_image(file_storage):
+    if isinstance(file_storage, (list, tuple)):
+        return [saved for image in file_storage if (saved := save_image(image))]
+
     if not file_storage or not file_storage.filename:
         return None
+
     filename = secure_filename(file_storage.filename)
+    if "." not in filename:
+        return None
     ext = filename.rsplit(".", 1)[-1].lower()
+    if ext not in current_app.config["ALLOWED_EXTENSIONS"]:
+        return None
+
+    if CLOUDINARY_ENABLED:
+        result = cloudinary.uploader.upload(file_storage, folder="haven-listings")
+        return result["secure_url"]
+
     unique_name = f"{uuid.uuid4().hex}.{ext}"
     path = os.path.join(current_app.config["UPLOAD_FOLDER"], unique_name)
     file_storage.save(path)
     return unique_name
+
+
+def uploaded_images(form):
+    return [image for image in form.images.data if image and image.filename]
+
+
+def next_image_position(prop):
+    return max((image.position for image in prop.images), default=-1) + 1
+
+
+def append_images(prop, images):
+    for position, image_path in enumerate(save_image(images), start=next_image_position(prop)):
+        db.session.add(PropertyImage(property_id=prop.id, image_path=image_path, position=position))
 
 
 @properties_bp.route("/")
@@ -119,7 +155,7 @@ def detail(property_id):
 def create():
     form = PropertyForm()
     if form.validate_on_submit():
-        image_filename = save_image(form.image.data)
+        images = uploaded_images(form)
         prop = Property(
             title=form.title.data.strip(),
             description=form.description.data.strip(),
@@ -132,11 +168,12 @@ def create():
             address=form.address.data.strip() if form.address.data else None,
             city=form.city.data.strip(),
             state=form.state.data.strip(),
-            image_filename=image_filename,
             is_available=form.is_available.data,
             owner_id=current_user.id,
         )
         db.session.add(prop)
+        db.session.flush()
+        append_images(prop, images)
         db.session.commit()
         flash("Listing published successfully.", "success")
         return redirect(url_for("properties.detail", property_id=prop.id))
@@ -154,6 +191,11 @@ def edit(property_id):
 
     form = PropertyForm(obj=prop)
     if form.validate_on_submit():
+        images = uploaded_images(form)
+        if len(prop.images) + len(images) > 8:
+            form.images.errors.append("A listing can have a maximum of 8 images.")
+            return render_template("properties/form.html", form=form, mode="edit", property=prop)
+
         prop.title = form.title.data.strip()
         prop.description = form.description.data.strip()
         prop.price = form.price.data
@@ -167,14 +209,50 @@ def edit(property_id):
         prop.state = form.state.data.strip()
         prop.is_available = form.is_available.data
 
-        if form.image.data and form.image.data.filename:
-            prop.image_filename = save_image(form.image.data)
+        append_images(prop, images)
 
         db.session.commit()
         flash("Listing updated.", "success")
         return redirect(url_for("properties.detail", property_id=prop.id))
 
     return render_template("properties/form.html", form=form, mode="edit", property=prop)
+
+
+@properties_bp.route("/<int:property_id>/images/<int:image_id>/delete", methods=["POST"])
+@login_required
+@agent_required
+def delete_image(property_id, image_id):
+    prop = Property.query.get_or_404(property_id)
+    if prop.owner_id != current_user.id:
+        abort(403)
+    image = PropertyImage.query.filter_by(id=image_id, property_id=prop.id).first_or_404()
+    was_cover = image.position == 0
+    db.session.delete(image)
+    db.session.flush()
+    remaining_images = PropertyImage.query.filter_by(property_id=prop.id).order_by(PropertyImage.position).all()
+    if was_cover and remaining_images:
+        remaining_images[0].position = 0
+    for position, remaining_image in enumerate(remaining_images):
+        remaining_image.position = position
+    db.session.commit()
+    flash("Photo deleted.", "info")
+    return redirect(url_for("properties.edit", property_id=prop.id))
+
+
+@properties_bp.route("/<int:property_id>/images/<int:image_id>/make-cover", methods=["POST"])
+@login_required
+@agent_required
+def make_cover(property_id, image_id):
+    prop = Property.query.get_or_404(property_id)
+    if prop.owner_id != current_user.id:
+        abort(403)
+    image = PropertyImage.query.filter_by(id=image_id, property_id=prop.id).first_or_404()
+    cover = PropertyImage.query.filter_by(property_id=prop.id, position=0).first()
+    if cover and cover.id != image.id:
+        cover.position, image.position = image.position, cover.position
+    db.session.commit()
+    flash("Cover photo updated.", "success")
+    return redirect(url_for("properties.edit", property_id=prop.id))
 
 
 @properties_bp.route("/<int:property_id>/delete", methods=["POST"])

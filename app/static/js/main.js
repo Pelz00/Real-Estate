@@ -44,15 +44,33 @@
   }
 
   // ---------- Image preview on upload forms ----------
-  var imageInput = document.querySelector('input[type="file"][name="image"]');
-  var previewImg = document.getElementById("imagePreview");
-  if (imageInput && previewImg) {
+  var imageInput = document.querySelector('input[type="file"][name="images"]');
+  var previewGrid = document.getElementById("imagePreview");
+  if (imageInput && previewGrid) {
     imageInput.addEventListener("change", function () {
-      var file = imageInput.files && imageInput.files[0];
-      if (file) {
-        previewImg.src = URL.createObjectURL(file);
-        previewImg.style.display = "block";
-      }
+      previewGrid.replaceChildren();
+      Array.prototype.forEach.call(imageInput.files || [], function (file) {
+        var image = document.createElement("img");
+        image.src = URL.createObjectURL(file);
+        image.alt = "Selected property photo";
+        image.onload = function () { URL.revokeObjectURL(image.src); };
+        previewGrid.appendChild(image);
+      });
+    });
+  }
+
+  // ---------- Property gallery ----------
+  var galleryMainImage = document.getElementById("galleryMainImage");
+  if (galleryMainImage) {
+    document.querySelectorAll("[data-gallery-image]").forEach(function (thumbnail) {
+      thumbnail.addEventListener("click", function () {
+        galleryMainImage.src = thumbnail.getAttribute("data-gallery-image");
+        document.querySelectorAll("[data-gallery-image]").forEach(function (item) {
+          var selected = item === thumbnail;
+          item.classList.toggle("is-active", selected);
+          item.setAttribute("aria-pressed", selected ? "true" : "false");
+        });
+      });
     });
   }
 })();

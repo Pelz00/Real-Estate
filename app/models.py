@@ -4,6 +4,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 
 
+def resolve_image_url(image_path):
+    """Resolve either a Cloudinary URL or a filename stored under static/uploads."""
+    if not image_path:
+        return None
+    if image_path.startswith(("http://", "https://")):
+        return image_path
+    from flask import url_for
+    return url_for("static", filename="uploads/" + image_path)
+
+
 class User(UserMixin, db.Model):
     __tablename__ = "users"
 
@@ -69,6 +79,12 @@ class Property(db.Model):
     inquiries = db.relationship(
         "Inquiry", backref="property", lazy="dynamic", cascade="all, delete-orphan"
     )
+    images = db.relationship(
+        "PropertyImage",
+        backref="property",
+        order_by="PropertyImage.position",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def formatted_price(self):
@@ -76,11 +92,37 @@ class Property(db.Model):
         return f"${self.price:,.0f}{suffix}"
 
     @property
-    def cover_image(self):
-        return self.image_filename or None
+    def image_url(self):
+        if self.images:
+            return resolve_image_url(self.images[0].image_path)
+        return resolve_image_url(self.image_filename)
+
+    @property
+    def gallery_urls(self):
+        if self.images:
+            return [resolve_image_url(image.image_path) for image in self.images]
+        legacy_url = resolve_image_url(self.image_filename)
+        return [legacy_url] if legacy_url else []
 
     def __repr__(self):
         return f"<Property {self.title}>"
+
+
+class PropertyImage(db.Model):
+    __tablename__ = "property_images"
+
+    id = db.Column(db.Integer, primary_key=True)
+    property_id = db.Column(db.Integer, db.ForeignKey("properties.id"), nullable=False, index=True)
+    image_path = db.Column(db.String(500), nullable=False)
+    position = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    @property
+    def url(self):
+        return resolve_image_url(self.image_path)
+
+    def __repr__(self):
+        return f"<PropertyImage {self.id} for property {self.property_id}>"
 
 
 class Inquiry(db.Model):
