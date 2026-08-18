@@ -32,6 +32,35 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Log in")
 
 
+class ForgotPasswordForm(FlaskForm):
+    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=150)])
+    submit = SubmitField("Send code")
+
+
+class VerifyResetCodeForm(FlaskForm):
+    code = StringField("6-digit reset code", validators=[DataRequired(), Length(min=6, max=6)])
+    password = PasswordField("New password", validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField(
+        "Confirm new password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
+    )
+    submit = SubmitField("Reset password")
+
+
+class SetNewPasswordForm(FlaskForm):
+    password = PasswordField("New password", validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField(
+        "Confirm new password",
+        validators=[DataRequired(), EqualTo("password", message="Passwords must match.")],
+    )
+    submit = SubmitField("Reset password")
+
+
+class VerifyEmailForm(FlaskForm):
+    code = StringField("6-digit verification code", validators=[DataRequired(), Length(min=6, max=6)])
+    submit = SubmitField("Verify email")
+
+
 class PropertyForm(FlaskForm):
     title = StringField("Title", validators=[DataRequired(), Length(max=150)])
     description = TextAreaField("Description", validators=[DataRequired()])

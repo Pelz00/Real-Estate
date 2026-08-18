@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import secrets
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
@@ -24,6 +25,11 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default="buyer")  # 'buyer', 'agent', or 'admin'
     phone = db.Column(db.String(30))
     is_active = db.Column(db.Boolean, nullable=False, default=True)
+    email_verified = db.Column(db.Boolean, nullable=False, default=False)
+    verification_code_hash = db.Column(db.String(255), nullable=True)
+    verification_code_expires_at = db.Column(db.DateTime, nullable=True)
+    reset_code_hash = db.Column(db.String(255), nullable=True)
+    reset_code_expires_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     properties = db.relationship(
@@ -38,6 +44,40 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def set_verification_code(self, expires_minutes=15):
+        """Generate and store a short-lived email-verification code."""
+        code = f"{secrets.randbelow(900000) + 100000:06d}"
+        self.verification_code_hash = generate_password_hash(code)
+        self.verification_code_expires_at = datetime.utcnow() + timedelta(
+            minutes=expires_minutes
+        )
+        return code
+
+    def verify_code(self, submitted_code):
+        """Return whether a submitted verification code is valid and current."""
+        return bool(
+            self.verification_code_hash
+            and self.verification_code_expires_at
+            and self.verification_code_expires_at >= datetime.utcnow()
+            and check_password_hash(self.verification_code_hash, submitted_code)
+        )
+
+    def set_reset_code(self, expires_minutes=15):
+        """Generate and store a short-lived password-reset code."""
+        code = f"{secrets.randbelow(900000) + 100000:06d}"
+        self.reset_code_hash = generate_password_hash(code)
+        self.reset_code_expires_at = datetime.utcnow() + timedelta(minutes=expires_minutes)
+        return code
+
+    def verify_reset_code(self, submitted_code):
+        """Return whether a submitted password-reset code is valid and current."""
+        return bool(
+            self.reset_code_hash
+            and self.reset_code_expires_at
+            and self.reset_code_expires_at >= datetime.utcnow()
+            and check_password_hash(self.reset_code_hash, submitted_code)
+        )
 
     @property
     def is_agent(self):

@@ -53,13 +53,13 @@ def run():
         db.drop_all()
         db.create_all()
 
-        agent = User(name="Amara Okafor", email="agent@haven.com", role="agent")
+        agent = User(name="Amara Okafor", email="agent@haven.com", role="agent", email_verified=True)
         agent.set_password("password123")
 
-        buyer = User(name="Daniel Brooks", email="buyer@haven.com", role="buyer")
+        buyer = User(name="Daniel Brooks", email="buyer@haven.com", role="buyer", email_verified=True)
         buyer.set_password("password123")
 
-        admin = User(name="Site Admin", email="admin@haven.com", role="admin")
+        admin = User(name="Site Admin", email="admin@haven.com", role="admin", email_verified=True)
         admin.set_password("password123")
 
         db.session.add_all([agent, buyer, admin])

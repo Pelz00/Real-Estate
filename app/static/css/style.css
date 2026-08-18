@@ -395,6 +395,20 @@ input:focus, select:focus, textarea:focus {
 }
 textarea { resize: vertical; min-height: 110px; }
 
+.otp-input {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.otp-input__box {
+  width: 48px !important;
+  height: 52px;
+  padding: 0 !important;
+  text-align: center;
+  font-size: 1.5rem !important;
+  font-variant-numeric: tabular-nums;
+}
+
 .form-group { margin-bottom: 18px; }
 .form-group label {
   display: block;
@@ -737,6 +751,7 @@ tr:last-child td { border-bottom: none; }
 .auth-card h1 { font-size: 1.6rem; }
 .auth-switch { text-align: center; margin-top: 18px; font-size: 0.9rem; color: var(--text-muted); }
 .auth-switch a { color: var(--brass-strong); font-weight: 600; }
+.auth-switch button { background: none; border: 0; color: var(--brass-strong); cursor: pointer; font: inherit; font-weight: 600; padding: 0; }
 
 /* ---------- Footer ---------- */
 .site-footer {

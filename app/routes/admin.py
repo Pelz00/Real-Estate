@@ -39,8 +39,6 @@ def dashboard():
     )
 
 
-# ---------------- Users ----------------
-
 @admin_bp.route("/users")
 @login_required
 @admin_required
@@ -55,15 +53,12 @@ def users():
 def set_role(user_id):
     user = User.query.get_or_404(user_id)
     new_role = request.form.get("role")
-
     if new_role not in ("buyer", "agent", "admin"):
         flash("Invalid role.", "error")
         return redirect(url_for("admin.users"))
-
     if user.id == current_user.id and new_role != "admin":
         flash("You can't remove your own admin role.", "error")
         return redirect(url_for("admin.users"))
-
     user.role = new_role
     db.session.commit()
     flash(f"{user.name} is now a{'n' if new_role == 'admin' else ''} {new_role}.", "success")
@@ -75,11 +70,9 @@ def set_role(user_id):
 @admin_required
 def toggle_active(user_id):
     user = User.query.get_or_404(user_id)
-
     if user.id == current_user.id:
         flash("You can't deactivate your own account.", "error")
         return redirect(url_for("admin.users"))
-
     user.is_active = not user.is_active
     db.session.commit()
     flash(f"{user.name} was {'reactivated' if user.is_active else 'deactivated'}.", "info")
@@ -91,18 +84,14 @@ def toggle_active(user_id):
 @admin_required
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
-
     if user.id == current_user.id:
         flash("You can't delete your own account.", "error")
         return redirect(url_for("admin.users"))
-
     db.session.delete(user)
     db.session.commit()
     flash(f"{user.name}'s account and all their listings were deleted.", "info")
     return redirect(url_for("admin.users"))
 
-
-# ---------------- Properties ----------------
 
 @admin_bp.route("/properties")
 @login_required
@@ -133,8 +122,6 @@ def delete_property(property_id):
     flash("Listing removed by admin.", "info")
     return redirect(url_for("admin.properties"))
 
-
-# ---------------- Inquiries ----------------
 
 @admin_bp.route("/inquiries")
 @login_required

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Verify your email | Haven & Co.{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <span class="hero-eyebrow">One more step</span>
+    <h1>Verify your email</h1>
+    <p class="form-hint">We sent a 6-digit code to <strong>{{ user.email }}</strong>.</p>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="form-group">
+        {{ form.code.label }}
+        {{ form.code(inputmode="numeric", autocomplete="one-time-code", maxlength="6") }}
+        {% for e in form.code.errors %}<div class="form-error">{{ e }}</div>{% endfor %}
+      </div>
+      {{ form.submit(class="btn btn-primary btn-block") }}
+    </form>
+
+    <form method="post" action="{{ url_for('auth.resend_verification_code') }}">
+      {{ form.hidden_tag() }}
+      <p class="auth-switch">Didn't get a code? <button type="submit" class="auth-link">Resend it</button></p>
+    </form>
+  </div>
+</div>
+{% endblock %}
