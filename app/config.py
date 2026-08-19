@@ -8,6 +8,12 @@ def _normalize_db_url(url):
     requires the 'postgresql://' scheme. Rewrite it if needed."""
     if url and url.startswith("postgres://"):
         return url.replace("postgres://", "postgresql://", 1)
+    # Resolve local relative SQLite paths from the project root. Flask-
+    # SQLAlchemy otherwise interprets them relative to Flask's instance path.
+    if url and url.startswith("sqlite:///") and not url.startswith("sqlite:////"):
+        sqlite_path = url.removeprefix("sqlite:///")
+        if sqlite_path != ":memory:":
+            return "sqlite:///" + os.path.abspath(os.path.join(BASE_DIR, sqlite_path))
     return url
 
 
