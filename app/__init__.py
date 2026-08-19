@@ -6,7 +6,14 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf import CSRFProtect
 
-load_dotenv()
+
+def load_local_environment():
+    """Load local .env values without overriding hosting-platform variables."""
+    # Render's injected environment always wins over a local .env file.
+    load_dotenv(override=False)
+
+
+load_local_environment()
 
 from .config import Config
 
@@ -24,6 +31,8 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     database_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+    database_scheme = database_uri.split(":", 1)[0] if ":" in database_uri else "unknown"
+    print(f"Haven & Co. database scheme: {database_scheme}")
     # Only SQLite files need a local directory. Other SQLAlchemy URLs (such as
     # PostgreSQL) are connection strings, not filesystem paths.
     if database_uri.startswith("sqlite:///"):
