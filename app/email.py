@@ -3,6 +3,7 @@
 import os
 
 import requests
+from flask import current_app, has_app_context
 
 
 def _sender_email():
@@ -12,6 +13,14 @@ def _sender_email():
     )
 
 
+def _log(level, message):
+    """Log through Flask when available, otherwise keep CLI output visible."""
+    if has_app_context():
+        getattr(current_app.logger, level)(message)
+    else:
+        print(message)
+
+
 def _send_brevo_email(payload, code, recipient, label):
     """Send through Brevo and retain a useful local fallback on failure."""
     api_key = os.environ.get("BREVO_API_KEY")
@@ -19,6 +28,8 @@ def _send_brevo_email(payload, code, recipient, label):
         print(f"{label} for {recipient}: {code}")
         return False
 
+    sender_email = payload["sender"]["email"]
+    _log("info", f"BREVO SEND SENDER: {sender_email}")
     try:
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
@@ -26,13 +37,17 @@ def _send_brevo_email(payload, code, recipient, label):
             json=payload,
             timeout=10,
         )
-        response.raise_for_status()
+        if not 200 <= response.status_code < 300:
+            detail = response.text.replace("\n", " ")
+            _log(
+                "error",
+                f"BREVO SEND FAILED: HTTP {response.status_code}; response={detail}",
+            )
+            print(f"{label} fallback for {recipient}: {code}")
+            return False
         return True
-    except requests.HTTPError as exc:
-        detail = response.text[:300].replace("\n", " ")
-        print(f"Brevo rejected {label.lower()} for {recipient} (HTTP {response.status_code}): {detail}")
     except requests.RequestException as exc:
-        print(f"Unable to send {label.lower()} for {recipient}: {exc}")
+        _log("error", f"BREVO SEND FAILED: request error for {recipient}: {exc}")
 
     print(f"{label} fallback for {recipient}: {code}")
     return False
