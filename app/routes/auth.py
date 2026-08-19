@@ -47,6 +47,7 @@ def register():
 
         code = user.set_verification_code()
         db.session.commit()
+        print(f"CALLING send_verification_email FOR {user.email}")
         send_verification_email(user, code)
         session["pending_verification_user_id"] = user.id
         flash("Check your email for a 6-digit verification code.", "info")
@@ -70,6 +71,7 @@ def login():
             if not user.email_verified:
                 code = user.set_verification_code()
                 db.session.commit()
+                print(f"CALLING send_verification_email FOR {user.email}")
                 send_verification_email(user, code)
                 session["pending_verification_user_id"] = user.id
                 flash("Please verify your email first — we've sent you a new code.", "info")
@@ -127,6 +129,7 @@ def resend_verification_code():
     # Production should rate-limit this endpoint per user/IP to prevent email abuse.
     code = user.set_verification_code()
     db.session.commit()
+    print(f"CALLING send_verification_email FOR {user.email}")
     send_verification_email(user, code)
     flash("A new code has been sent.", "info")
     return redirect(url_for("auth.verify_email"))
@@ -148,6 +151,7 @@ def forgot_password():
         if user:
             code = user.set_reset_code()
             db.session.commit()
+            print(f"CALLING send_password_reset_code_email FOR {user.email}")
             send_password_reset_code_email(user, code)
             session["password_reset_user_id"] = user.id
         flash("If an account with that email exists, we've sent a password reset code.", "info")
@@ -200,6 +204,7 @@ def resend_reset_code():
     # Production should rate-limit this endpoint per user/IP to prevent email abuse.
     code = user.set_reset_code()
     db.session.commit()
+    print(f"CALLING send_password_reset_code_email FOR {user.email}")
     send_password_reset_code_email(user, code)
     flash("A new code has been sent.", "info")
     return redirect(url_for("auth.verify_reset_code"))

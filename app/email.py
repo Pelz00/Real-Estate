@@ -30,6 +30,7 @@ def _send_brevo_email(payload, code, recipient, label):
 
     sender_email = payload["sender"]["email"]
     _log("info", f"BREVO SEND SENDER: {sender_email}")
+    print("ABOUT TO CALL BREVO API")
     try:
         response = requests.post(
             "https://api.brevo.com/v3/smtp/email",
@@ -37,6 +38,7 @@ def _send_brevo_email(payload, code, recipient, label):
             json=payload,
             timeout=10,
         )
+        print(f"BREVO RESPONSE STATUS: {response.status_code}")
         if not 200 <= response.status_code < 300:
             detail = response.text.replace("\n", " ")
             _log(
@@ -47,6 +49,7 @@ def _send_brevo_email(payload, code, recipient, label):
             return False
         return True
     except requests.RequestException as exc:
+        print(f"EMAIL SEND EXCEPTION: {type(exc).__name__}: {exc}")
         _log("error", f"BREVO SEND FAILED: request error for {recipient}: {exc}")
 
     print(f"{label} fallback for {recipient}: {code}")
@@ -55,6 +58,8 @@ def _send_brevo_email(payload, code, recipient, label):
 
 def send_verification_email(user, code):
     """Send an email-verification code through Brevo or print it locally."""
+    print("EMAIL FUNCTION CALLED: send_verification_email")
+    print(f"BREVO_API_KEY present: {bool(os.environ.get('BREVO_API_KEY'))}")
     sender_email = _sender_email()
     payload = {
         "sender": {"name": "Haven & Co.", "email": sender_email},
@@ -71,6 +76,8 @@ def send_verification_email(user, code):
 
 def send_password_reset_code_email(user, code):
     """Send a password-reset code through Brevo or print it locally."""
+    print("EMAIL FUNCTION CALLED: send_password_reset_code_email")
+    print(f"BREVO_API_KEY present: {bool(os.environ.get('BREVO_API_KEY'))}")
     sender_email = _sender_email()
     payload = {
         "sender": {"name": "Haven & Co.", "email": sender_email},
